@@ -12,9 +12,9 @@ param (
 
 function validar_parametros {
     param (
-        $d, 
-        $a, 
-        $p
+        [string] $d, 
+        [string] $a, 
+        [bool] $p
     ) 
 
     # Validar exclusividad entre -archivo y -pantalla

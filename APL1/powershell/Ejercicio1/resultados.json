@@ -1,14 +1,14 @@
 {
   "5_aciertos": {
-    "agencia": "1",
-    "jugada": "3"
-  },
-  "4_aciertos": {
-    "agencia": "3",
-    "jugada": "1"
+    "jugada": "3",
+    "agencia": "1"
   },
   "3_aciertos": {
-    "agencia": "2",
-    "jugada": "2"
+    "jugada": "2",
+    "agencia": "2"
+  },
+  "4_aciertos": {
+    "jugada": "1",
+    "agencia": "3"
   }
 }
