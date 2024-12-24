@@ -45,7 +45,7 @@ function Get-FromCache {
         [string]$Type,
         [int]$Id
     )
-    $CacheDir = "$PSScriptRoot/cache"
+    $CacheDir = "$PSScriptRoot/Ejercicio5/cache"
     if (-not (Test-Path -Path $CacheDir)) {
         New-Item -ItemType Directory -Path $CacheDir | Out-Null
     }
@@ -64,7 +64,7 @@ function Save-ToCache {
         [int]$Id,
         [object]$Data
     )
-    $CacheDir = "$PSScriptRoot/cache"
+    $CacheDir = "$PSScriptRoot/Ejercicio5/cache"
     if (-not (Test-Path -Path $CacheDir)) {
         New-Item -ItemType Directory -Path $CacheDir | Out-Null
     }
