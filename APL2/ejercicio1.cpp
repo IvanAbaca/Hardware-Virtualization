@@ -1,68 +1,69 @@
 #include <iostream> // Para std::cout y std::endl
 #include <unistd.h> // Para fork(), getpid(), getppid()
 #include <cstdlib>  // Para exit()
+#include <sys/wait.h>
+
+#include <fstream> // Para std::ofstream
+#include <string>  // Para std::string
+#include <ctime>   // Para obtener la hora actual
 
 using namespace std;
 
 // Declaración de funciones
 pid_t crear_hijo();
 pid_t crear_demonio();
+void escribir_log(const std::string& mensaje, const std::string& filename);
 
 int main(int argc, char *argv[]) {
-    cout << "Soy el padre con PID " << getpid() << endl;
+    int status;
 
-    pid_t hijo_1 = crear_hijo();
-
-    #pragma region primer hijo
-    if (hijo_1 == 0) {
-        // Código del primer hijo
-        cout << "Soy el hijo 1 con PID " << getpid()
-             << "\tMi padre es " << getppid() << endl;
-
-        for (int i = 0; i < 2; i++) {
-            pid_t nieto = crear_hijo();
-            if (nieto == 0) {
-                cout << "Soy el nieto " << (i + 1) << " con PID " << getpid()
-                     << "\tMi padre es " << getppid() << endl;
-                return 0;
-            }
+    pid_t hijo1 = crear_hijo();
+    if(hijo1 == 0) {
+        cout<<getpid()<<"(hijo1) es hijo de "<<getppid()<<"(padre)"<<endl;
+        
+        pid_t nieto1 = crear_hijo();
+        if(nieto1 == 0) {
+            cout<<getpid()<<"(nieto1) es hijo de "<<getppid()<<"(hijo1)"<<endl;
+            exit(0);
         }
 
         pid_t zombie = crear_hijo();
-        if (zombie == 0) {
-            cout << "Soy el zombie con PID " << getpid() << "\tMi padre es " << getppid() << endl;
-            exit(0); // Salida inmediata para dejar el zombie
+        if(zombie == 0) {
+            cout<<getpid()<<"(zombie) es hijo de "<<getppid()<<"(hijo1)"<<endl;
+            exit(0);
         }
 
-        return 0;
+        pid_t nieto2 = crear_hijo();
+        if(nieto2 == 0) {
+            cout<<getpid()<<"(nieto2) es hijo de "<<getppid()<<"(hijo1)"<<endl;
+            exit(0);
+        }
+
+        waitpid(nieto1, &status, 0);
+        waitpid(nieto2, &status, 0);
+        exit(0);
     }
-    #pragma endregion primer hijo
 
-    pid_t hijo_2 = crear_hijo();
-
-    #pragma region segundo hijo
-    if (hijo_2 == 0) {
-        // Código del segundo hijo
-
-        cout << "Soy el hijo 2 con PID " << getpid()
-             << "\tMi padre es " << getppid() << endl;
+    pid_t hijo2 = crear_hijo();
+    if(hijo2 == 0) {
+        cout<<getpid()<<"(hijo2) es hijo de "<<getppid()<<"(padre)"<<endl;
 
         pid_t demonio = crear_demonio();
-        if (demonio == 0) {
-            cout << "Soy el demonio con PID " << getpid() << "\tMi padre era " << getppid() << endl;
-
-            // Simular que el demonio hace algo
-            while (true) {
-                sleep(10); // El demonio se queda ejecutando
-            }
+        if(demonio == 0) {
+            cout<<getpid()<<"(demonio) es hijo de "<<getppid()<<"(hijo2)"<<endl;
+            sleep(5);
+            std::string mensaje = std::to_string(getpid()) + "(demonio), el cual es independiente del padre.";
+            escribir_log(mensaje, "demonio.log");
+            exit(0);
         }
+        exit(0);
     }
-    #pragma endregion segundo hijo
 
+    waitpid(hijo1, &status, 0);
+    waitpid(hijo2, &status, 0);
     return 0;
 }
 
-// Función para crear un hijo
 pid_t crear_hijo() {
     pid_t hijo = fork();
 
@@ -74,29 +75,30 @@ pid_t crear_hijo() {
     return hijo;
 }
 
-// Función para crear un demonio
 pid_t crear_demonio() {
     pid_t pid = fork();
 
-    if (pid < 0) {
-        perror("Error al crear el demonio");
+    if (pid < 0)
         exit(1);
-    }
-    if (pid > 0) {
-        // Proceso padre termina
-        exit(0);
-    }
 
-    // Proceso hijo continúa y se convierte en demonio
-    if (setsid() < 0) {
-        perror("Error al crear la nueva sesión");
+    if (setsid() < 0)
         exit(1);
-    }
 
-    // Redirigir stdin, stdout y stderr a /dev/null
     freopen("/dev/null", "r", stdin);
     freopen("/dev/null", "w", stdout);
     freopen("/dev/null", "w", stderr);
 
-    return 0; // El demonio no debe devolver nada útil en este caso
+    return pid;
+}
+
+void escribir_log(const std::string& mensaje, const std::string& filename) {
+    std::ofstream log_file(filename, std::ios::app);
+
+    if (!log_file.is_open()) {
+        std::cerr << "Error al abrir el archivo de log." << std::endl;
+        return;
+    }
+
+    log_file << mensaje << std::endl;
+    log_file.close();
 }
