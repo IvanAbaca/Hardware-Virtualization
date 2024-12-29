@@ -18,50 +18,60 @@ int main(int argc, char *argv[]) {
     int status;
 
     pid_t hijo1 = crear_hijo();
+
     if(hijo1 == 0) {
         cout<<getpid()<<"(hijo1) es hijo de "<<getppid()<<"(padre)"<<endl;
-        
+
         pid_t nieto1 = crear_hijo();
         if(nieto1 == 0) {
             cout<<getpid()<<"(nieto1) es hijo de "<<getppid()<<"(hijo1)"<<endl;
-            exit(0);
+            cin.get();
         }
+        else {
+            pid_t zombie = crear_hijo();
+            if(zombie == 0) {
+                cout<<getpid()<<"(zombie) es hijo de "<<getppid()<<"(hijo1)"<<endl;
+            }
+            else {
+                pid_t nieto2 = crear_hijo();
+                if(nieto2 == 0) {
+                    cout<<getpid()<<"(nieto2) es hijo de "<<getppid()<<"(hijo1)"<<endl;
+                    cin.get();
+                }
+                else {
+                    waitpid(nieto1, &status, 0);
+                    waitpid(nieto2, &status, 0);
 
-        pid_t zombie = crear_hijo();
-        if(zombie == 0) {
-            cout<<getpid()<<"(zombie) es hijo de "<<getppid()<<"(hijo1)"<<endl;
-            exit(0);
+                    cin.get();
+                }
+            }
         }
-
-        pid_t nieto2 = crear_hijo();
-        if(nieto2 == 0) {
-            cout<<getpid()<<"(nieto2) es hijo de "<<getppid()<<"(hijo1)"<<endl;
-            exit(0);
-        }
-
-        waitpid(nieto1, &status, 0);
-        waitpid(nieto2, &status, 0);
-        exit(0);
     }
+    else {
+        pid_t hijo2 = crear_hijo();
+        
+        if(hijo2 == 0) {
+            cout<<getpid()<<"(hijo2) es hijo de "<<getppid()<<"(padre)"<<endl;
 
-    pid_t hijo2 = crear_hijo();
-    if(hijo2 == 0) {
-        cout<<getpid()<<"(hijo2) es hijo de "<<getppid()<<"(padre)"<<endl;
-
-        pid_t demonio = crear_demonio();
-        if(demonio == 0) {
-            cout<<getpid()<<"(demonio) es hijo de "<<getppid()<<"(hijo2)"<<endl;
-            sleep(5);
-            std::string mensaje = std::to_string(getpid()) + "(demonio), el cual es independiente del padre.";
-            escribir_log(mensaje, "demonio.log");
-            exit(0);
+            pid_t demonio = crear_demonio();
+            if(demonio == 0) {
+                cout<<getpid()<<"(demonio) es hijo de "<<getppid()<<"(hijo2)"<<endl;
+                std::string mensaje = std::to_string(getpid()) + "(demonio), el cual es independiente del padre.";
+                escribir_log(mensaje, "demonio.log");
+                sleep(5);
+            }
+            else {
+                cin.get();
+            }
         }
-        exit(0);
-    }
+        else {
+            waitpid(hijo2, &status, 0);
+            waitpid(hijo1, &status, 0);
 
-    waitpid(hijo1, &status, 0);
-    waitpid(hijo2, &status, 0);
-    return 0;
+            cin.get();
+        }
+    }
+    exit(0);
 }
 
 pid_t crear_hijo() {
